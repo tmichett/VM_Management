@@ -1,0 +1,199 @@
+---
+manifest version: 1
+curriculum:
+ name: LB0000
+ release: 1.r2025080813
+ description: RHCSA track
+ technology: RHEL10.0
+ modality: [ ILT, RAV ]
+ generation: 8
+ locale: [ en_US ]
+ publish date: 2025-08-08 13:26:28+00:00
+ publisher: aglogows
+ artifacts:
+ ############################
+ # VM Images/ISO Artifacts  #
+ ############################
+ - filename: lb0000-classroom-sda-10.0-202506171248.qcow2
+   type: content
+   content type: file
+   target directory: rhel10.0/x86_64/vms
+   final name: rhel10.0/x86_64/vms/lb0000-classroom-sda.qcow2
+   usage: [ foundation ]
+   checksum: 8126966b411ca7e25e5b60f726eb9156
+
+ - filename: rhel-10.0-x86_64-dvd.iso
+   type: content
+   content type: file
+   target directory: rhel10.0/x86_64/isos
+   final name: rhel10.0/x86_64/vms/lb0000-classroom-sr0.iso
+   usage: [ classroom ]
+   checksum: 0a92b39f1714211f8dc1c3ed2eb719b2
+
+ - filename: lb0000-10.0-x86_64-additional-20250519.iso
+   type: content
+   content type: file
+   target directory: rhel10.0/x86_64/extraisos
+   final name: rhel10.0/x86_64/vms/lb0000-classroom-sr1.iso
+   usage: [ classroom ]
+   checksum: a07979085edf1da5af87a73a438fb4d0
+
+ - filename: lb0000-servera-sda-10.0-202506171248.qcow2
+   type: content
+   content type: file
+   target directory: rhel10.0/x86_64/vms
+   final name: rhel10.0/x86_64/vms/lb0000-servera-sda.qcow2
+   usage: [ foundation ]
+   checksum: 387daef74ef68f85c30b86cd2c956ef3
+
+ - filename: lb0000-serverb-sda-10.0-202506171248.qcow2
+   type: content
+   content type: file
+   target directory: rhel10.0/x86_64/vms
+   final name: rhel10.0/x86_64/vms/lb0000-serverb-sda.qcow2
+   usage: [ foundation ]
+   checksum: 440b6c7a0879234ab459d51f7c23701a
+
+ - filename: lb0000-serverc-sr0-10.0-20250519.iso
+   type: content
+   content type: file
+   target directory: rhel10.0/x86_64/vms
+   final name: rhel10.0/x86_64/vms/lb0000-serverc-sr0.iso
+   usage: [ foundation ]
+   checksum: ec094acf7c1ad4753b11f2b883bbf356
+
+ - filename: lb0000-utility-sda-10.0-202506171248.qcow2
+   type: content
+   content type: file
+   target directory: rhel10.0/x86_64/vms
+   final name: rhel10.0/x86_64/vms/lb0000-utility-sda.qcow2
+   usage: [ foundation ]
+   checksum: 74663332335127f9f03c477fd97ad4c2
+
+ - filename: lb0000-workstation-sda-10.0-202507101700.qcow2
+   type: content
+   content type: file
+   target directory: rhel10.0/x86_64/vms
+   final name: rhel10.0/x86_64/vms/lb0000-workstation-sda.qcow2
+   usage: [ foundation ]
+   checksum: e96558c014b87e71311b41b71cddce81
+
+
+ ##############################
+ # Blank Disk Images (by size) #
+ ##############################
+ - filename: rhel-blankdisk-5G-20190201.qcow2
+   type: content
+   content type: file
+   target directory: rhel10.0/x86_64/vms
+   final name: rhel10.0/x86_64/vms/lb0000-servera-sdb.qcow2
+   hardlink names:
+     - rhel10.0/x86_64/vms/lb0000-servera-sdc.qcow2
+     - rhel10.0/x86_64/vms/lb0000-servera-sdd.qcow2
+     - rhel10.0/x86_64/vms/lb0000-serverb-sdb.qcow2
+     - rhel10.0/x86_64/vms/lb0000-serverb-sdc.qcow2
+     - rhel10.0/x86_64/vms/lb0000-serverb-sdd.qcow2
+   usage: [ foundation ]
+   checksum: a52d889fd7693116b8b81c8ee132664d
+
+ - filename: rhel-blankdisk-10G-20250201.qcow2
+   type: content
+   content type: file
+   target directory: rhel10.0/x86_64/vms
+   final name: rhel10.0/x86_64/vms/lb0000-serverc-sda.qcow2
+   usage: [ foundation ]
+   checksum: 5daeba8d03e7f392d9f11358b52c4989
+
+ ###########################
+ # VM XML Definition Files #
+ ###########################
+ - filename: lb0000-classroom-10.0-20250806.xml
+   type: content
+   content type: file
+   target directory: rhel10.0/x86_64/vms
+   final name: rhel10.0/x86_64/vms/lb0000-classroom.xml
+   usage: [ foundation ]
+   checksum: db7fc40a386fe23dbd80d81887348171
+
+ - filename: lb0000-servera-10.0-20250806.xml
+   type: content
+   content type: file
+   target directory: rhel10.0/x86_64/vms
+   final name: rhel10.0/x86_64/vms/lb0000-servera.xml
+   usage: [ foundation ]
+   checksum: 5c19f55c6cde5bf4c7eeb72cb02e413c
+
+ - filename: lb0000-serverb-10.0-20250806.xml
+   type: content
+   content type: file
+   target directory: rhel10.0/x86_64/vms
+   final name: rhel10.0/x86_64/vms/lb0000-serverb.xml
+   usage: [ foundation ]
+   checksum: d3d7a2994bd3265252a33c77134b0527
+
+ - filename: lb0000-serverc-10.0-20250806.xml
+   type: content
+   content type: file
+   target directory: rhel10.0/x86_64/vms
+   final name: rhel10.0/x86_64/vms/lb0000-serverc.xml
+   usage: [ foundation ]
+   checksum: 85a05e5c6f4635ca5b75b7ade8eb63cc
+
+ - filename: lb0000-utility-10.0-20250806.xml
+   type: content
+   content type: file
+   target directory: rhel10.0/x86_64/vms
+   final name: rhel10.0/x86_64/vms/lb0000-utility.xml
+   usage: [ foundation ]
+   checksum: 55616b1a4412b6fd969390477a4b0e78
+
+ - filename: lb0000-workstation-10.0-20250806.xml
+   type: content
+   content type: file
+   target directory: rhel10.0/x86_64/vms
+   final name: rhel10.0/x86_64/vms/lb0000-workstation.xml
+   usage: [ foundation ]
+   checksum: 26dca12b1f8a27e53fef355ea20b0e89
+
+ ######################################
+ # Additional Resources and Materials #
+ ######################################
+ - filename: lb0000-classroom-cidata-20250722.iso
+   type: content
+   content type: file
+   target directory: rhel10.0/x86_64/vms
+   final name: rhel10.0/x86_64/vms/lb0000-classroom-cidata.iso
+   usage: [ foundation ]
+   checksum: 8f9448c443a34fcb1c19b66b1d0ebf32
+
+ - filename: lb0000-utility-cidata-20250715.iso
+   type: content
+   content type: file
+   target directory: rhel10.0/x86_64/vms
+   final name: rhel10.0/x86_64/vms/lb0000-utility-cidata.iso
+   usage: [ foundation ]
+   checksum: 32cfcd5af571d5cc2b62453e5891582f
+
+ - filename: lb0000-workstation-cidata-20250808.iso
+   type: content
+   content type: file
+   target directory: rhel10.0/x86_64/vms
+   final name: rhel10.0/x86_64/vms/lb0000-workstation-cidata.iso
+   usage: [ foundation ]
+   checksum: 6214a3fcf31e1947baefd296096bd57b
+
+ - filename: foundation0-lb0000-10.0-1.r2025080620gitbec8362.noarch.rpm
+   type: content
+   content type: rpm
+   target directory: ucf/Packages
+   usage: [ classroom ]
+   checksum: c573018d6f881069208143d9d83580d2
+
+ - filename: ClassroomSetup-LB0000-2025071415.txt
+   type: content
+   content type: file
+   target directory: docs
+   final name: /root/ClassroomSetup-LB0000-2025071415.txt
+   usage: [ classroom ]
+   checksum: df0cf2ffdad866294f904487dc7c41f7
+
