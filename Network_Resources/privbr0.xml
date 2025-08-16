@@ -1,0 +1,5 @@
+<network ipv6='yes'>
+  <name>privbr0</name>
+  <bridge name="privbr0" />
+  <ip address="172.25.250.250" netmask="255.255.255.0" />
+</network>

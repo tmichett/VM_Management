@@ -1,0 +1,4 @@
+<network ipv6='yes'>
+  <name>privnet</name>
+  <bridge name="virbr1" />
+</network>

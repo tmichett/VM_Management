@@ -330,12 +330,18 @@ LAB_VMS=classroom utility workstation servera serverb serverc
                         if os.path.exists(local_xml):
                             shutil.copy2(local_xml, xml_file)
                         else:
-                            # Download from server
-                            result = self.run_command(['curl', '-#', '-f', '-o', xml_file, 
-                                                     f"{CONTENTSERVER}/{xml_source}"], check=False)
-                            if result.returncode != 0:
-                                print(f"Error: Unable to download XML definition - {xml_file}")
-                                sys.exit(12)
+                            # Final fallback: check for exact filename in /content/
+                            direct_file = f"/content/{self.rht_config['RHT_COURSE']}-{vmname}.xml"
+                            if os.path.exists(direct_file):
+                                print(f"Using local file: {direct_file}")
+                                shutil.copy2(direct_file, xml_file)
+                            else:
+                                # Download from server
+                                result = self.run_command(['curl', '-#', '-f', '-o', xml_file, 
+                                                         f"{CONTENTSERVER}/{xml_source}"], check=False)
+                                if result.returncode != 0:
+                                    print(f"Error: Unable to download XML definition - {xml_file}")
+                                    sys.exit(12)
                 
                 # Modify XML for current environment
                 self.modify_vm_xml(xml_file, vmname)
@@ -378,11 +384,35 @@ LAB_VMS=classroom utility workstation servera serverb serverc
             # Update machine type
             content = content.replace('pc-q35-rhel8.2.0', 'q35')
         
-        # Replace privbr0 bridge with default network if privbr0 doesn't exist
-        if 'privbr0' in content:
-            print("Converting privbr0 network to default libvirt network")
-            content = content.replace('<interface type="bridge">', '<interface type="network">')
-            content = content.replace('<source bridge="privbr0"/>', '<source network="default"/>')
+        # Replace bridge networks with libvirt networks where appropriate
+        if 'privbr0' in content or 'virbr0' in content:
+            print("Converting bridge networks to libvirt networks")
+            
+            # Convert privbr0 bridge to default network (if privbr0 network doesn't exist)
+            content = re.sub(
+                r'<interface type="bridge">\s*\n\s*<source bridge="privbr0"/>',
+                '<interface type="network">\n      <source network="default"/>',
+                content
+            )
+            
+            # Convert virbr0 bridge to default network (virbr0 is the bridge used by default network)  
+            content = re.sub(
+                r'<interface type="bridge">\s*\n\s*<source bridge="virbr0"/>',
+                '<interface type="network">\n      <source network="default"/>',
+                content
+            )
+            
+            # Also handle case where interface type was already converted but source wasn't
+            content = re.sub(
+                r'<source bridge="virbr0"/>',
+                '<source network="default"/>',
+                content
+            )
+            content = re.sub(
+                r'<source bridge="privbr0"/>',
+                '<source network="default"/>',
+                content
+            )
         
         # Add virtualport for OpenVSwitch if needed
         if self.rht_config.get('RHT_PRIVUSEOVS') == 'yes':
@@ -440,12 +470,18 @@ LAB_VMS=classroom utility workstation servera serverb serverc
                     if os.path.exists(local_qcow):
                         shutil.copy2(local_qcow, qcow2_file)
                     else:
-                        # Download from server
-                        result = self.run_command(['curl', '-#', '-f', '-o', qcow2_file,
-                                                 f"{CONTENTSERVER}/{qcow_source}"], check=False)
-                        if result.returncode != 0:
-                            print(f"Error: Unable to download image - {qcow2_file}")
-                            sys.exit(12)
+                        # Final fallback: check for exact filename in /content/
+                        direct_file = f"/content/{vdisk_base}.qcow2"
+                        if os.path.exists(direct_file):
+                            print(f"Using local file: {direct_file}")
+                            shutil.copy2(direct_file, qcow2_file)
+                        else:
+                            # Download from server
+                            result = self.run_command(['curl', '-#', '-f', '-o', qcow2_file,
+                                                     f"{CONTENTSERVER}/{qcow_source}"], check=False)
+                            if result.returncode != 0:
+                                print(f"Error: Unable to download image - {qcow2_file}")
+                                sys.exit(12)
             
             # Create or restore overlay
             if not os.path.exists(overlay_file):
@@ -488,15 +524,21 @@ LAB_VMS=classroom utility workstation servera serverb serverc
                     if os.path.exists(local_iso):
                         shutil.copy2(local_iso, iso_file)
                     else:
-                        # Download from server
-                        result = self.run_command(['curl', '-#', '-f', '-o', iso_file,
-                                                 f"{CONTENTSERVER}/{iso_source}"], check=False)
-                        if result.returncode != 0:
-                            print(f"Warning: Unable to download ISO image - {iso_file}")
-                            print(f"Continuing without this ISO file (it may be optional)")
-                            # Remove the incomplete file if it exists
-                            if os.path.exists(iso_file):
-                                os.remove(iso_file)
+                        # Final fallback: check for exact filename in /content/
+                        direct_file = f"/content/{iso_disk}"
+                        if os.path.exists(direct_file):
+                            print(f"Using local file: {direct_file}")
+                            shutil.copy2(direct_file, iso_file)
+                        else:
+                            # Download from server
+                            result = self.run_command(['curl', '-#', '-f', '-o', iso_file,
+                                                     f"{CONTENTSERVER}/{iso_source}"], check=False)
+                            if result.returncode != 0:
+                                print(f"Warning: Unable to download ISO image - {iso_file}")
+                                print(f"Continuing without this ISO file (it may be optional)")
+                                # Remove the incomplete file if it exists
+                                if os.path.exists(iso_file):
+                                    os.remove(iso_file)
     
     def start_vm(self, vmlist):
         """Start VMs"""
