@@ -1,0 +1,6 @@
+# VM Management Configuration File
+# This file contains configuration variables for the VM management system
+
+# List of available VMs
+LAB_VMS=classroom utility workstation servera serverb serverc
+

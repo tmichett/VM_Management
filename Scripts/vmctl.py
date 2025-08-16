@@ -65,7 +65,7 @@ class VMController:
         self.config_loaded = False
         
     def load_config(self):
-        """Load configuration from /etc/rht and /etc/os-release"""
+        """Load configuration from /etc/vmconfigs and /etc/os-release"""
         try:
             # Load OS release info
             self.version_id = "9.0"  # Default version
@@ -80,7 +80,7 @@ class VMController:
             
             # Load VM configuration
             self.rht_config = {}
-            config_file = '/etc/rht'
+            config_file = '/etc/vmconfigs'
             
             # Try to load existing config, or use defaults
             if os.path.exists(config_file):
@@ -99,10 +99,10 @@ class VMController:
                 self.rht_config = {
                     'RHT_VENUE': 'ilt',
                     'RHT_ENROLLMENT': '1',
-                    'RHT_COURSE': 'vm-course',
+                    'RHT_COURSE': 'lb0000',
                     'RHT_ROLE': 'student',
-                    'RHT_VMTREE': 'rhel9.0/x86_64',
-                    'RHT_VMS': 'desktop server',
+                    'RHT_VMTREE': '.',
+                    'LAB_VMS': 'classroom utility workstation servera serverb serverc',
                     'RHT_VM0': 'foundation',
                     'RHT_STOPTIMEVMS': '20'
                 }
@@ -110,19 +110,23 @@ class VMController:
                 # Don't prompt for config creation during initialization
                 # This will be handled later if needed for actual VM operations
             
+            # Handle backwards compatibility: convert RHT_VMS to LAB_VMS if found
+            if 'RHT_VMS' in self.rht_config and 'LAB_VMS' not in self.rht_config:
+                self.rht_config['LAB_VMS'] = self.rht_config['RHT_VMS']
+            
             # Validate required variables
-            required_vars = ['RHT_ENROLLMENT', 'RHT_COURSE', 'RHT_VMS', 'RHT_VMTREE']
+            required_vars = ['RHT_ENROLLMENT', 'RHT_COURSE', 'LAB_VMS', 'RHT_VMTREE']
             for var in required_vars:
                 if var not in self.rht_config:
                     print(f"Warning: Missing variable {var}, using default")
                     if var == 'RHT_ENROLLMENT':
                         self.rht_config[var] = '1'
                     elif var == 'RHT_COURSE':
-                        self.rht_config[var] = 'vm-course'
-                    elif var == 'RHT_VMS':
-                        self.rht_config[var] = 'desktop server'
+                        self.rht_config[var] = 'lb0000'
+                    elif var == 'LAB_VMS':
+                        self.rht_config[var] = 'classroom utility workstation servera serverb serverc'
                     elif var == 'RHT_VMTREE':
-                        self.rht_config[var] = 'rhel9.0/x86_64'
+                        self.rht_config[var] = '.'
             
             # Check for vILT
             if self.rht_config.get('RHT_VENUE') == 'vilt':
@@ -138,9 +142,9 @@ class VMController:
             self.rht_config = {
                 'RHT_VENUE': 'ilt',
                 'RHT_ENROLLMENT': '1',
-                'RHT_COURSE': 'vm-course',
-                'RHT_VMS': 'desktop server',
-                'RHT_VMTREE': 'rhel9.0/x86_64'
+                'RHT_COURSE': 'lb0000',
+                'LAB_VMS': 'classroom utility workstation servera serverb serverc',
+                'RHT_VMTREE': '.'
             }
             self.enrollment = 1
     
@@ -149,29 +153,9 @@ class VMController:
         config_content = """# VM Management Configuration File
 # This file contains configuration variables for the VM management system
 
-# Venue type (ilt = Instructor Led Training)
-RHT_VENUE=ilt
-
-# Student enrollment number
-RHT_ENROLLMENT=1
-
-# Course identifier
-RHT_COURSE=vm-course
-
-# Student role
-RHT_ROLE=student
-
-# VM tree path for downloads
-RHT_VMTREE=rhel9.0/x86_64
-
 # List of available VMs
-RHT_VMS=desktop server
+LAB_VMS=classroom utility workstation servera serverb serverc
 
-# Infrastructure VMs (foundation systems)
-RHT_VM0=foundation
-
-# VM stop timeout in seconds
-RHT_STOPTIMEVMS=20
 """
         try:
             with open(config_file, 'w') as f:
@@ -332,17 +316,26 @@ RHT_STOPTIMEVMS=20
                     print(f"Downloading virtual machine definition file for {vmname}.")
                     xml_source = f"{self.rht_config['RHT_VMTREE']}/vms/{self.rht_config['RHT_COURSE']}-{vmname}.xml"
                     
-                    # Try local content first
-                    local_xml = f"/content/{xml_source}"
-                    if os.path.exists(local_xml):
+                    # Try local content first - check for files with version patterns
+                    local_xml_pattern = f"/content/{self.rht_config['RHT_COURSE']}-{vmname}-*.xml"
+                    matching_files = glob.glob(local_xml_pattern)
+                    if matching_files:
+                        # Use the first matching file (could be enhanced to pick latest version)
+                        local_xml = matching_files[0]
+                        print(f"Using local file: {local_xml}")
                         shutil.copy2(local_xml, xml_file)
                     else:
-                        # Download from server
-                        result = self.run_command(['curl', '-#', '-f', '-o', xml_file, 
-                                                 f"{CONTENTSERVER}/{xml_source}"], check=False)
-                        if result.returncode != 0:
-                            print(f"Error: Unable to download XML definition - {xml_file}")
-                            sys.exit(12)
+                        # Fallback to old path structure
+                        local_xml = f"/content/{xml_source}"
+                        if os.path.exists(local_xml):
+                            shutil.copy2(local_xml, xml_file)
+                        else:
+                            # Download from server
+                            result = self.run_command(['curl', '-#', '-f', '-o', xml_file, 
+                                                     f"{CONTENTSERVER}/{xml_source}"], check=False)
+                            if result.returncode != 0:
+                                print(f"Error: Unable to download XML definition - {xml_file}")
+                                sys.exit(12)
                 
                 # Modify XML for current environment
                 self.modify_vm_xml(xml_file, vmname)
@@ -384,6 +377,12 @@ RHT_STOPTIMEVMS=20
             
             # Update machine type
             content = content.replace('pc-q35-rhel8.2.0', 'q35')
+        
+        # Replace privbr0 bridge with default network if privbr0 doesn't exist
+        if 'privbr0' in content:
+            print("Converting privbr0 network to default libvirt network")
+            content = content.replace('<interface type="bridge">', '<interface type="network">')
+            content = content.replace('<source bridge="privbr0"/>', '<source network="default"/>')
         
         # Add virtualport for OpenVSwitch if needed
         if self.rht_config.get('RHT_PRIVUSEOVS') == 'yes':
@@ -427,17 +426,26 @@ RHT_STOPTIMEVMS=20
                 print(f"Downloading virtual machine disk image {vdisk_base}.qcow2")
                 qcow_source = f"{self.rht_config['RHT_VMTREE']}/vms/{vdisk_base}.qcow2"
                 
-                # Try local content first
-                local_qcow = f"/content/{qcow_source}"
-                if os.path.exists(local_qcow):
+                # Try local content first - check for files with version patterns
+                local_qcow_pattern = f"/content/{vdisk_base}-*.qcow2"
+                matching_files = glob.glob(local_qcow_pattern)
+                if matching_files:
+                    # Use the first matching file (could be enhanced to pick latest version)
+                    local_qcow = matching_files[0]
+                    print(f"Using local file: {local_qcow}")
                     shutil.copy2(local_qcow, qcow2_file)
                 else:
-                    # Download from server
-                    result = self.run_command(['curl', '-#', '-f', '-o', qcow2_file,
-                                             f"{CONTENTSERVER}/{qcow_source}"], check=False)
-                    if result.returncode != 0:
-                        print(f"Error: Unable to download image - {qcow2_file}")
-                        sys.exit(12)
+                    # Fallback to old path structure
+                    local_qcow = f"/content/{qcow_source}"
+                    if os.path.exists(local_qcow):
+                        shutil.copy2(local_qcow, qcow2_file)
+                    else:
+                        # Download from server
+                        result = self.run_command(['curl', '-#', '-f', '-o', qcow2_file,
+                                                 f"{CONTENTSERVER}/{qcow_source}"], check=False)
+                        if result.returncode != 0:
+                            print(f"Error: Unable to download image - {qcow2_file}")
+                            sys.exit(12)
             
             # Create or restore overlay
             if not os.path.exists(overlay_file):
@@ -464,17 +472,31 @@ RHT_STOPTIMEVMS=20
                 print(f"Downloading virtual machine disk image {iso_disk}")
                 iso_source = f"{self.rht_config['RHT_VMTREE']}/vms/{iso_disk}"
                 
-                # Try local content first
-                local_iso = f"/content/{iso_source}"
-                if os.path.exists(local_iso):
+                # Try local content first - check for files with version patterns  
+                # Extract base name without .iso extension for pattern matching
+                iso_base = iso_disk.replace('.iso', '')
+                local_iso_pattern = f"/content/{iso_base}-*.iso"
+                matching_files = glob.glob(local_iso_pattern)
+                if matching_files:
+                    # Use the first matching file (could be enhanced to pick latest version)
+                    local_iso = matching_files[0]
+                    print(f"Using local file: {local_iso}")
                     shutil.copy2(local_iso, iso_file)
                 else:
-                    # Download from server
-                    result = self.run_command(['curl', '-#', '-f', '-o', iso_file,
-                                             f"{CONTENTSERVER}/{iso_source}"], check=False)
-                    if result.returncode != 0:
-                        print(f"Error: Unable to download ISO image - {iso_file}")
-                        sys.exit(12)
+                    # Fallback to old path structure
+                    local_iso = f"/content/{iso_source}"
+                    if os.path.exists(local_iso):
+                        shutil.copy2(local_iso, iso_file)
+                    else:
+                        # Download from server
+                        result = self.run_command(['curl', '-#', '-f', '-o', iso_file,
+                                                 f"{CONTENTSERVER}/{iso_source}"], check=False)
+                        if result.returncode != 0:
+                            print(f"Warning: Unable to download ISO image - {iso_file}")
+                            print(f"Continuing without this ISO file (it may be optional)")
+                            # Remove the incomplete file if it exists
+                            if os.path.exists(iso_file):
+                                os.remove(iso_file)
     
     def start_vm(self, vmlist):
         """Start VMs"""
@@ -764,7 +786,7 @@ RHT_STOPTIMEVMS=20
     
     def parse_vm_names(self, vmname):
         """Parse and expand VM names"""
-        all_vms = self.rht_config['RHT_VMS'].split()
+        all_vms = self.rht_config['LAB_VMS'].split()
         vm0_list = self.rht_config.get('RHT_VM0', '').split()
         
         if vmname == "everything":
@@ -822,10 +844,10 @@ Usage: vmctl [-y|--yes] VMCMD VMNAME [DATETIME]
     
     def offer_config_creation(self):
         """Offer to create config file if needed for VM operations"""
-        if not os.path.exists('/etc/rht'):
+        if not os.path.exists('/etc/vmconfigs'):
             try:
-                if input("Create default config file at /etc/rht? (y/n): ").lower().startswith('y'):
-                    self.create_default_config('/etc/rht')
+                if input("Create default config file at /etc/vmconfigs? (y/n): ").lower().startswith('y'):
+                    self.create_default_config('/etc/vmconfigs')
             except (EOFError, KeyboardInterrupt):
                 print("\nContinuing with default configuration.")
     
