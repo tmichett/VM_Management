@@ -3,7 +3,7 @@
 manifest_convert.py - Convert YAML manifest files to simplified format
 
 This script reads a YAML manifest file and extracts filenames with specific
-extensions (.qcow2, .raw, .iso, .tgz, .tar.gz) to create a new simplified
+extensions (.qcow2, .raw, .iso, .tgz, .tar.gz, .xml) to create a new simplified
 YAML file with a static target directory.
 """
 
@@ -28,15 +28,15 @@ def extract_filename_prefix(filename):
 
 def is_target_extension(filename):
     """Check if filename has one of the target extensions."""
-    target_extensions = ['.qcow2', '.raw', '.iso', '.tgz', '.tar.gz']
+    target_extensions = ['.qcow2', '.raw', '.iso', '.tgz', '.xml']
     filename_lower = filename.lower()
     
-    # Special handling for .tar.gz
+    # Special handling for .tar.gz (must be checked first since it's two extensions)
     if filename_lower.endswith('.tar.gz'):
         return True
     
     # Check other extensions
-    for ext in target_extensions[:-1]:  # Exclude .tar.gz since we handled it above
+    for ext in target_extensions:
         if filename_lower.endswith(ext):
             return True
     
@@ -77,7 +77,7 @@ def process_manifest(input_file):
                 })
     
     if not target_files:
-        print("No files found with target extensions (.qcow2, .raw, .iso, .tgz, .tar.gz)")
+        print("No files found with target extensions (.qcow2, .raw, .iso, .tgz, .tar.gz, .xml)")
         return None
     
     # Create the output structure

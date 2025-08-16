@@ -19,6 +19,18 @@ name: LB0000
   target_directory: /content
 - filename: rhel-blankdisk-10G-20250201.qcow2
   target_directory: /content
+- filename: lb0000-classroom-10.0-20250806.xml
+  target_directory: /content
+- filename: lb0000-servera-10.0-20250806.xml
+  target_directory: /content
+- filename: lb0000-serverb-10.0-20250806.xml
+  target_directory: /content
+- filename: lb0000-serverc-10.0-20250806.xml
+  target_directory: /content
+- filename: lb0000-utility-10.0-20250806.xml
+  target_directory: /content
+- filename: lb0000-workstation-10.0-20250806.xml
+  target_directory: /content
 - filename: lb0000-classroom-cidata-20250722.iso
   target_directory: /content
 - filename: lb0000-utility-cidata-20250715.iso
