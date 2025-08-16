@@ -2463,7 +2463,7 @@ def remove(manifestFilename):
     Specify the manifest file found in the cache (use \"list\" to see
     what is available to remove from the cache).
 
-    Looks in the cache directory defined in $HOME/.icrm/config.yml
+    Looks in the cache directory defined in $HOME/vm_repo_config.yml
     """
     global rht_rc
     global error_summary
@@ -2531,7 +2531,7 @@ def removeloop(manifestPartname):
     found in the cache (use \"list\" to see what is available to remove
     from the cache).
 
-    Looks in the cache directory defined in $HOME/.icrm/config.yml
+    Looks in the cache directory defined in $HOME/vm_repo_config.yml
     """
     global rht_rc
     global error_summary
@@ -2557,7 +2557,7 @@ def rmobsoletes():
     """Remove obsolete artifacts from cache.
     (those that are unreferenced which can be listed with \"lsartifacts\")
 
-    Looks in the cache directory defined in $HOME/.icrm/config.yml
+    Looks in the cache directory defined in $HOME/vm_repo_config.yml
     """
     global rht_rc
     global error_summary
@@ -4309,7 +4309,7 @@ def usbmkmenu():
 def lsicmfs(f):
     """List icmfs in cache that references passed artifact.
 
-    Looks in the cache directory defined in $HOME/.icrm/config.yml
+    Looks in the cache directory defined in $HOME/vm_repo_config.yml
     """
     global rht_rc
     global error_summary
@@ -4355,7 +4355,7 @@ def lsicmfs(f):
 def lsartifacts():
     """List artifacts in cache (and whether they are referenced).
 
-    Looks in the cache directory defined in $HOME/.icrm/config.yml
+    Looks in the cache directory defined in $HOME/vm_repo_config.yml
     """
     global rht_rc
     global error_summary
@@ -4404,7 +4404,7 @@ def lsartifacts():
 def list():
     """List manifests available in cache.
 
-    Looks in the cache directory defined in $HOME/.icrm/config.yml
+    Looks in the cache directory defined in $HOME/vm_repo_config.yml
     """
     global rht_rc
     global error_summary
@@ -4613,8 +4613,9 @@ def exit():
     rht_rc = 0
     raise EOFError
 
-def _read_config():
-    """Read the configuration from the default configuration folder."""
+def config_create():
+    """Create the vm_repo_config.yml configuration file in the user's home directory."""
+    global alwaysyes
     logger = logging.getLogger('vm-usb')
     # Hunt for home directory
     myuser = os.getenv("SUDO_USER")
@@ -4623,14 +4624,59 @@ def _read_config():
         if not myuser:
             myuser = "root"
     myhome = os.path.expanduser("~" + myuser)
-    fn = os.path.join(myhome, ".icrm", "config.yml")
+    fn = os.path.join(myhome, "vm_repo_config.yml")
+    logger.info("Creating configuration file: " + fn)
+    
+    # Check if config file already exists
+    if os.path.exists(fn):
+        logger.warning("Configuration file already exists: " + fn)
+        msg = "Overwrite existing configuration file"
+        confirm = True if alwaysyes or input("%s (y/N) " % msg).lower() == 'y' else False
+        if not confirm:
+            logger.info("Configuration creation cancelled")
+            return False
+    
+    # Create default configuration
+    config = { 'repository': os.path.join(myhome, "vm_repository") }
+    
+    # Create repository directory if it doesn't exist
+    if not os.path.exists(config['repository']):
+        try:
+            os.makedirs(config['repository'])
+            logger.info("Created repository directory: " + config['repository'])
+        except OSError as e:
+            logger.error("Failed to create repository directory: " + str(e))
+            return False
+    
+    # Write configuration file
+    try:
+        with open(fn, 'w') as fp:
+            yaml.dump(config, fp, default_flow_style=False, explicit_start=True)
+        logger.info("Successfully created configuration file: " + fn)
+        logger.info("Repository directory: " + config['repository'])
+        return True
+    except IOError as e:
+        logger.error("Failed to create configuration file: " + str(e))
+        return False
+
+def _read_config():
+    """Read the configuration from the user's home directory."""
+    logger = logging.getLogger('vm-usb')
+    # Hunt for home directory
+    myuser = os.getenv("SUDO_USER")
+    if not myuser:
+        myuser = os.getenv("USER")
+        if not myuser:
+            myuser = "root"
+    myhome = os.path.expanduser("~" + myuser)
+    fn = os.path.join(myhome, "vm_repo_config.yml")
     logger.info("Configuration file: " + fn)
     try:
         fp = open(fn)
     except IOError as e:
         en=e.errno
         if (en == errno.EACCES or en == errno.ENOENT):
-            config={ 'repository': os.path.join(myhome, ".icrm", "repository") }
+            config={ 'repository': os.path.join(myhome, "vm_repository") }
             if not(os.access(config['repository'],os.R_OK)):
                 os.makedirs(config['repository'])
             fp = open(fn,'w')
