@@ -1,4 +1,5 @@
 name: LB0000
+files:
 - filename: lb0000-classroom-sda-10.0-202506171248.qcow2
   target_directory: /content
 - filename: rhel-10.0-x86_64-dvd.iso

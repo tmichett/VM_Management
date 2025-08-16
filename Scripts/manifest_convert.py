@@ -93,13 +93,8 @@ def write_output_file(output_data, output_file):
     """Write the processed data to a YAML file."""
     try:
         with open(output_file, 'w', encoding='utf-8') as f:
-            # Write name first
-            f.write(f"name: {output_data['name']}\n")
-            
-            # Write files with proper YAML list format
-            for file_info in output_data['files']:
-                f.write(f"- filename: {file_info['filename']}\n")
-                f.write(f"  target_directory: {file_info['target_directory']}\n")
+            # Write the complete YAML structure using the yaml library for proper formatting
+            yaml.dump(output_data, f, default_flow_style=False, sort_keys=False)
         
         print(f"Successfully created '{output_file}'")
         print(f"Processed {len(output_data['files'])} files")

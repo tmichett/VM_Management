@@ -4659,6 +4659,123 @@ def config_create():
         logger.error("Failed to create configuration file: " + str(e))
         return False
 
+def load_manifest(manifestFilename):
+    """Load artifacts from a YAML manifest file to their target directories.
+    
+    This function reads the specified .yml manifest file from the repository cache,
+    creates the target directories if they don't exist, and copies all artifacts
+    from the cache to their respective target directories.
+    
+    Specify the .yml manifest file found in the cache (use \"list\" to see
+    what is available to load from the cache).
+    """
+    global rht_rc
+    global config
+    logger = logging.getLogger('vm-usb')
+    
+    # Get the repository cache directory
+    rht_cachedir = config['repository']
+    
+    # Build the full path to the manifest file
+    manifestPath = os.path.join(rht_cachedir, manifestFilename)
+    
+    logger.info("Loading manifest: " + manifestFilename)
+    logger.debug("Manifest path: " + manifestPath)
+    
+    # Check if manifest file exists
+    if not os.path.isfile(manifestPath):
+        logger.error("Manifest file not found: " + manifestPath)
+        rht_rc = 1
+        return
+    
+    # Check if it's a .yml file
+    if not manifestFilename.lower().endswith('.yml'):
+        logger.error("Manifest file must have .yml extension: " + manifestFilename)
+        rht_rc = 1
+        return
+    
+    # Parse the YAML manifest file
+    try:
+        with open(manifestPath, 'r') as f:
+            data = yaml.load(f, Loader=yaml.SafeLoader)
+    except yaml.YAMLError as e:
+        logger.error("Error parsing YAML manifest: " + str(e))
+        rht_rc = 2
+        return
+    except IOError as e:
+        logger.error("Cannot read manifest file: " + str(e))
+        rht_rc = 3
+        return
+    
+    # Validate the manifest structure
+    if not isinstance(data, dict) or 'name' not in data:
+        logger.error("Invalid manifest format: missing 'name' field")
+        rht_rc = 2
+        return
+    
+    # Get the course name for logging
+    course_name = data.get('name', 'Unknown')
+    logger.info("Processing course: " + course_name)
+    
+    # Get the list of files from the 'files' key
+    files_list = data.get('files', [])
+    
+    if not files_list:
+        logger.error("No 'files' section found in manifest")
+        rht_rc = 2
+        return
+    
+    # Process each file
+    artifacts_processed = 0
+    artifacts_skipped = 0
+    
+    for file_entry in files_list:
+        if not isinstance(file_entry, dict) or 'filename' not in file_entry:
+            logger.debug("Skipping invalid file entry: " + str(file_entry))
+            artifacts_skipped += 1
+            continue
+        
+        filename = file_entry['filename']
+        target_dir = file_entry.get('target_directory', '/content')
+        
+        logger.info("Processing artifact: " + filename)
+        logger.debug("Target directory: " + target_dir)
+        
+        # Build source and destination paths
+        source_path = os.path.join(rht_cachedir, filename)
+        
+        # Create target directory if it doesn't exist
+        _createdir(target_dir)
+        
+        # Build destination path
+        destination_path = os.path.join(target_dir, filename)
+        
+        # Check if source file exists
+        if not os.path.isfile(source_path):
+            logger.warning("Source file not found, skipping: " + source_path)
+            artifacts_skipped += 1
+            continue
+        
+        # Copy the file
+        logger.info("Copying: " + filename + " -> " + target_dir)
+        try:
+            _rsync(source_path, destination_path)
+            artifacts_processed += 1
+            logger.debug("Successfully copied: " + filename)
+        except Exception as e:
+            logger.error("Failed to copy " + filename + ": " + str(e))
+            artifacts_skipped += 1
+    
+    # Summary
+    logger.info("Load manifest completed.")
+    logger.info("Artifacts processed: " + str(artifacts_processed))
+    if artifacts_skipped > 0:
+        logger.warning("Artifacts skipped: " + str(artifacts_skipped))
+    
+    if artifacts_processed == 0:
+        logger.error("No artifacts were successfully processed.")
+        rht_rc = 4
+
 def _read_config():
     """Read the configuration from the user's home directory."""
     logger = logging.getLogger('vm-usb')
