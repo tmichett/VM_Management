@@ -2,39 +2,58 @@ name: LB0000
 files:
 - filename: lb0000-classroom-sda-10.0-202506171248.qcow2
   target_directory: /content
+  final_name: lb0000-classroom-sda.qcow2
 - filename: rhel-10.0-x86_64-dvd.iso
   target_directory: /content
+  final_name: lb0000-classroom-sr0.iso
 - filename: lb0000-10.0-x86_64-additional-20250519.iso
   target_directory: /content
+  final_name: lb0000-classroom-sr1.iso
 - filename: lb0000-servera-sda-10.0-202506171248.qcow2
   target_directory: /content
+  final_name: lb0000-servera-sda.qcow2
 - filename: lb0000-serverb-sda-10.0-202506171248.qcow2
   target_directory: /content
+  final_name: lb0000-serverb-sda.qcow2
 - filename: lb0000-serverc-sr0-10.0-20250519.iso
   target_directory: /content
+  final_name: lb0000-serverc-sr0.iso
 - filename: lb0000-utility-sda-10.0-202506171248.qcow2
   target_directory: /content
+  final_name: lb0000-utility-sda.qcow2
 - filename: lb0000-workstation-sda-10.0-202507101700.qcow2
   target_directory: /content
+  final_name: lb0000-workstation-sda.qcow2
 - filename: rhel-blankdisk-5G-20190201.qcow2
   target_directory: /content
+  final_name: lb0000-servera-sdb.qcow2
 - filename: rhel-blankdisk-10G-20250201.qcow2
   target_directory: /content
+  final_name: lb0000-serverc-sda.qcow2
 - filename: lb0000-classroom-10.0-20250806.xml
   target_directory: /content
+  final_name: lb0000-classroom.xml
 - filename: lb0000-servera-10.0-20250806.xml
   target_directory: /content
+  final_name: lb0000-servera.xml
 - filename: lb0000-serverb-10.0-20250806.xml
   target_directory: /content
+  final_name: lb0000-serverb.xml
 - filename: lb0000-serverc-10.0-20250806.xml
   target_directory: /content
+  final_name: lb0000-serverc.xml
 - filename: lb0000-utility-10.0-20250806.xml
   target_directory: /content
+  final_name: lb0000-utility.xml
 - filename: lb0000-workstation-10.0-20250806.xml
   target_directory: /content
+  final_name: lb0000-workstation.xml
 - filename: lb0000-classroom-cidata-20250722.iso
   target_directory: /content
+  final_name: lb0000-classroom-cidata.iso
 - filename: lb0000-utility-cidata-20250715.iso
   target_directory: /content
+  final_name: lb0000-utility-cidata.iso
 - filename: lb0000-workstation-cidata-20250808.iso
   target_directory: /content
+  final_name: lb0000-workstation-cidata.iso

@@ -71,10 +71,18 @@ def process_manifest(input_file):
         if isinstance(artifact, dict) and 'filename' in artifact:
             filename = artifact['filename']
             if is_target_extension(filename):
-                target_files.append({
+                file_entry = {
                     'filename': filename,
                     'target_directory': '/content'
-                })
+                }
+                
+                # Extract final name if present and add as filename-only
+                if 'final name' in artifact:
+                    final_name_path = artifact['final name']
+                    final_name_filename = os.path.basename(final_name_path)
+                    file_entry['final_name'] = final_name_filename
+                
+                target_files.append(file_entry)
     
     if not target_files:
         print("No files found with target extensions (.qcow2, .raw, .iso, .tgz, .tar.gz, .xml)")
