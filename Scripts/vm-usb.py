@@ -4738,8 +4738,13 @@ def load_manifest(manifestFilename):
         filename = file_entry['filename']
         target_dir = file_entry.get('target_directory', '/content')
         
+        # Use final_name if available, otherwise use original filename
+        final_name = file_entry.get('final_name', filename)
+        
         logger.info("Processing artifact: " + filename)
         logger.debug("Target directory: " + target_dir)
+        if final_name != filename:
+            logger.debug("Final name: " + final_name)
         
         # Build source and destination paths
         source_path = os.path.join(rht_cachedir, filename)
@@ -4747,8 +4752,8 @@ def load_manifest(manifestFilename):
         # Create target directory if it doesn't exist
         _createdir(target_dir)
         
-        # Build destination path
-        destination_path = os.path.join(target_dir, filename)
+        # Build destination path using final_name
+        destination_path = os.path.join(target_dir, final_name)
         
         # Check if source file exists
         if not os.path.isfile(source_path):
@@ -4757,11 +4762,17 @@ def load_manifest(manifestFilename):
             continue
         
         # Copy the file
-        logger.info("Copying: " + filename + " -> " + target_dir)
+        if final_name != filename:
+            logger.info("Copying: " + filename + " -> " + target_dir + "/" + final_name)
+        else:
+            logger.info("Copying: " + filename + " -> " + target_dir)
         try:
             _rsync(source_path, destination_path)
             artifacts_processed += 1
-            logger.debug("Successfully copied: " + filename)
+            if final_name != filename:
+                logger.debug("Successfully copied: " + filename + " as " + final_name)
+            else:
+                logger.debug("Successfully copied: " + filename)
         except Exception as e:
             logger.error("Failed to copy " + filename + ": " + str(e))
             artifacts_skipped += 1
